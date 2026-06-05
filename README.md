@@ -6,7 +6,7 @@
 
 ### Real-Time AI Prompt Data Loss Prevention
 
-_Intercept. Detect. Protect — before it's too late._
+*Intercept. Detect. Protect — before it's too late.*
 
 <br/>
 
@@ -82,16 +82,16 @@ CLEAR  INCONCLUSIVE
 
 ## Key Features
 
-| Feature                       | Description                                                                       |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| 🛡️ **Real-Time Interception** | Captures prompt text before it reaches ChatGPT, Gemini, or Claude                 |
-| 🔍 **Local-First Detection**  | 200+ regex patterns run entirely on-device — no cloud dependency for primary scan |
-| 🤖 **AI Fallback**            | Gemini API as secondary classifier for ambiguous cases (masked text only)         |
-| 📊 **Risk Classification**    | High / Medium / Low / None with automatic enforcement per level                   |
-| ✏️ **Prompt Revision**        | AI-generated safe rewrite of any blocked prompt — ready to resubmit               |
-| 📋 **Audit Logs**             | Anonymized activity logs per user, per department, org-wide                       |
-| 👥 **Role-Based Dashboard**   | Three roles: Normal User, Department Admin, System Admin                          |
-| ⚙️ **Configurable Rules**     | System admins can add, edit, and disable detection patterns                       |
+| Feature | Description |
+|---|---|
+| 🛡️ **Real-Time Interception** | Captures prompt text before it reaches ChatGPT, Gemini, or Claude |
+| 🔍 **Local-First Detection** | 200+ regex patterns run entirely on-device — no cloud dependency for primary scan |
+| 🤖 **AI Fallback** | Gemini API as secondary classifier for ambiguous cases (masked text only) |
+| 📊 **Risk Classification** | High / Medium / Low / None with automatic enforcement per level |
+| ✏️ **Prompt Revision** | AI-generated safe rewrite of any blocked prompt — ready to resubmit |
+| 📋 **Audit Logs** | Anonymized activity logs per user, per department, org-wide |
+| 👥 **Role-Based Dashboard** | Three roles: Normal User, Department Admin, System Admin |
+| ⚙️ **Configurable Rules** | System admins can add, edit, and disable detection patterns |
 
 ---
 
@@ -99,13 +99,13 @@ CLEAR  INCONCLUSIVE
 
 <div align="center">
 
-| Platform                          | Supported  |
-| --------------------------------- | ---------- |
-| ChatGPT (chat.openai.com)         | ✅         |
-| Google Gemini (gemini.google.com) | ✅         |
-| Claude (claude.ai)                | ✅         |
-| Microsoft Copilot                 | 🔜 Planned |
-| Perplexity                        | 🔜 Planned |
+| Platform | Supported |
+|---|---|
+| ChatGPT (chat.openai.com) | ✅ |
+| Google Gemini (gemini.google.com) | ✅ |
+| Claude (claude.ai) | ✅ |
+| Microsoft Copilot | 🔜 Planned |
+| Perplexity | 🔜 Planned |
 
 </div>
 
@@ -140,14 +140,14 @@ CLEAR  INCONCLUSIVE
 
 <div align="center">
 
-| Layer              | Technology                                                    |
-| ------------------ | ------------------------------------------------------------- |
-| Browser Extension  | Chrome Manifest V3, Content Script, Background Service Worker |
-| Frontend Dashboard | React (JSX)                                                   |
-| Authentication     | Firebase Auth                                                 |
-| Database           | Firebase Firestore                                            |
-| AI Detection       | Regex Engine + Gemini API (fallback)                          |
-| Local Storage      | Chrome Storage API                                            |
+| Layer | Technology |
+|---|---|
+| Browser Extension | Chrome Manifest V3, Content Script, Background Service Worker |
+| Frontend Dashboard | React (JSX) |
+| Authentication | Firebase Auth |
+| Database | Firebase Firestore |
+| AI Detection | Regex Engine + Gemini API (fallback) |
+| Local Storage | Chrome Storage API |
 
 </div>
 
@@ -220,14 +220,14 @@ Normal User
 
 ## Performance Constraints
 
-| Metric                          | Constraint  |
-| ------------------------------- | ----------- |
-| Local Regex Detection           | ≤ 200ms     |
-| Gemini API Fallback (total)     | ≤ 500ms     |
-| Extension Memory                | ≤ 100MB RAM |
-| Admin Dashboard Load            | ≤ 3 seconds |
-| Detection Accuracy (structured) | ≥ 90%       |
-| False Positive Rate             | ≤ 10%       |
+| Metric | Constraint |
+|---|---|
+| Local Regex Detection | ≤ 200ms |
+| Gemini API Fallback (total) | ≤ 500ms |
+| Extension Memory | ≤ 100MB RAM |
+| Admin Dashboard Load | ≤ 3 seconds |
+| Detection Accuracy (structured) | ≥ 90% |
+| False Positive Rate | ≤ 10% |
 
 ---
 
@@ -236,21 +236,21 @@ Normal User
 > **GP1 (Analysis & Design) — Complete ✅**
 > GP2 (Implementation) — In Progress 🔨
 
-| Deliverable                         | Status  |
-| ----------------------------------- | ------- |
-| Requirements (43 FRs + NFRs)        | ✅ Done |
-| Use Case Diagrams (4 diagrams)      | ✅ Done |
-| Analysis Class Diagram              | ✅ Done |
-| Interaction Diagrams (6 UCs)        | ✅ Done |
-| Design Class Diagram                | ✅ Done |
-| System Architecture                 | ✅ Done |
-| UI Mockups (23 screens)             | ✅ Done |
-| Database Schema + ERD               | ✅ Done |
+| Deliverable | Status |
+|---|---|
+| Requirements (43 FRs + NFRs) | ✅ Done |
+| Use Case Diagrams (4 diagrams) | ✅ Done |
+| Analysis Class Diagram | ✅ Done |
+| Interaction Diagrams (6 UCs) | ✅ Done |
+| Design Class Diagram | ✅ Done |
+| System Architecture | ✅ Done |
+| UI Mockups (23 screens) | ✅ Done |
+| Database Schema + ERD | ✅ Done |
 | Algorithm Pseudocode (8 algorithms) | ✅ Done |
-| Test Scenarios (18 test cases)      | ✅ Done |
-| Chrome Extension Implementation     | 🔨 GP2  |
-| Admin Dashboard Implementation      | 🔨 GP2  |
-| Firebase Integration                | 🔨 GP2  |
+| Test Scenarios (18 test cases) | ✅ Done |
+| Chrome Extension Implementation | 🔨 GP2 |
+| Admin Dashboard Implementation | 🔨 GP2 |
+| Firebase Integration | 🔨 GP2 |
 
 ---
 
@@ -258,12 +258,12 @@ Normal User
 
 <div align="center">
 
-| #   | Name              | Student ID |
-| --- | ----------------- | ---------- |
-| 1   | Moath Alonayq     | 444100678  |
-| 2   | Tariq Algadheeb   | 444100905  |
-| 3   | Mohammed Albilaly | 444101589  |
-| 4   | Saad Alqarni      | 444102880  |
+| # | Name | Student ID |
+|---|---|---|
+| 1 | Moath Alonayq | 444100678 |
+| 2 | Tariq Algadheeb | 444100905 |
+| 3 | Mohammed Albilaly | 444101589 |
+| 4 | Saad Alqarni | 444102880 |
 
 **Advisor:** Dr. Sultan Alsarra
 **University:** King Saud University — College of Computer and Information Sciences
@@ -276,7 +276,6 @@ Normal User
 ## References
 
 Detection patterns and threat categories are based on:
-
 - NIST SP 800-122 — Guide to Protecting PII
 - Google Chrome Manifest V3 — Extension security standards
 - Google Cloud Data Processing Addendum — API data privacy guarantees
@@ -286,7 +285,7 @@ Detection patterns and threat categories are based on:
 
 <div align="center">
 
-_Hares AI — Protecting organizations from AI-related data leakage, one prompt at a time._
+*Hares AI — Protecting organizations from AI-related data leakage, one prompt at a time.*
 
 ![KSU](https://img.shields.io/badge/King%20Saud%20University-CCIS-darkgreen?style=flat-square)
 ![Year](https://img.shields.io/badge/Academic%20Year-2025--2026-blue?style=flat-square)
