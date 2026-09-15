@@ -15,7 +15,7 @@
 ## 🗂️ Detailed Task Checklist
 
 ### Sprint 1: The Identity & Deterministic Foundation
-- [ ] **Task 1.1:** Initialize FastAPI Backend directory structure & Docker Compose setup (`PostgreSQL` + `Redis`).
+- [/] **Task 1.1:** Initialize FastAPI Backend directory structure & Docker Compose setup (`PostgreSQL` + `Redis`).
 - [ ] **Task 1.2:** Configure SQLAlchemy v2 models, Pydantic schemas, and Alembic migrations for Users & Roles.
 - [ ] **Task 1.3:** Build CP Authentication Endpoints (`/api/v1/auth/login`, `/api/v1/auth/validate`).
 - [ ] **Task 1.4:** Build Extension Auth Gate (Manifest V3 Service Worker + `chrome.storage.local` JWT handling).
