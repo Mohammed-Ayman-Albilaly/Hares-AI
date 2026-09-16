@@ -20,7 +20,7 @@
 - [x] **Task 1.3:** Build CP Authentication Endpoints (`/api/v1/auth/login`, `/api/v1/auth/validate`).
 - [x] **Task 1.4:** Build Extension Auth Gate (Manifest V3 Service Worker + `chrome.storage.local` JWT handling).
 - [x] **Task 1.5:** Build Admin Dashboard Auth views (React + Vite + Shadcn Login Form).
-- [ ] **Verification 1.0:** Execute Sprint 1 Verification Cases (Token issuing, storage, and basic prompt blocking).
+- [x] **Verification 1.0:** Execute Sprint 1 Verification Cases (Token issuing, storage, and basic prompt blocking).
 
 ### Sprint 2: The Management Hub (Dynamic Sync & Audit)
 - [ ] **Task 2.1:** Implement CP Rule Management APIs (General & Departmental rules).
