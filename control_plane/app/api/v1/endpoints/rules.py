@@ -1,10 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from uuid import uuid4
+from sqlalchemy.orm import Session
+
 from control_plane.app.core.guardrail_engine.engine import engine
+from control_plane.app.models.audit import AuditLog
+from control_plane.app.schemas.audit import AuditLogCreate
+from control_plane.app.main import get_db
 
 class InspectRequest(BaseModel):
     text: str
+    user_id: Optional[str] = None
+    prompt_id: Optional[str] = None
 
 class InspectResponse(BaseModel):
     risk_severity: str
@@ -14,8 +22,7 @@ class InspectResponse(BaseModel):
 
 router = APIRouter()
 
-# In-memory storage for dynamic rules (Task 2.1 requirement)
-# In a real scenario, this would be in the DB, but for Task 2.1 we implement the API structure.
+# In-memory storage for dynamic rules
 DYNAMIC_RULES = {
     "active_rules": ["EMAIL", "PHONE", "CREDIT_CARD", "API_KEY", "GENERIC_SECRET"],
     "settings": {
@@ -25,11 +32,28 @@ DYNAMIC_RULES = {
 }
 
 @router.post("/inspect", response_model=InspectResponse)
-async def inspect_prompt(request: InspectRequest):
+async def inspect_prompt(request: InspectRequest, db: Session = Depends(get_db)):
     """
-    Inspects a prompt for sensitive data using the GuardrailEngine.
+    Inspects a prompt for sensitive data using the GuardrailEngine and logs the event.
     """
     result = engine.inspect(request.text)
+    
+    # Task 2.2: Audit Log Ingestion
+    prompt_id = request.prompt_id or str(uuid4())
+    
+    audit_entry = AuditLog(
+        prompt_id=prompt_id,
+        user_id=request.user_id if request.user_id else None,
+        risk_severity=result["risk_severity"],
+        detected_entities=result["detected_entities"],
+        original_prompt=result["original_content"],
+        masked_prompt=result["masked_content"]
+    )
+    
+    db.add(audit_entry)
+    db.commit()
+    db.refresh(audit_entry)
+    
     return result
 
 @router.get("/rules")
