@@ -5,6 +5,7 @@
   "description": "AI Data Guardrail Framework - Identity & Interception",
   "permissions": [
     "storage",
+    "alarms",
     "activeTab",
     "webRequest",
     "webRequestBlocking"

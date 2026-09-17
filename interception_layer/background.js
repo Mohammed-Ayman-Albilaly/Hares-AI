@@ -6,11 +6,52 @@ async function getToken() {
     return data.access_token;
 }
 
+/**
+ * Syncs active inspection rules from the Control Plane.
+ */
+async function syncRules() {
+    console.log("Attempting to sync rules from Control Plane...");
+    const token = await getToken();
+    
+    if (!token) {
+        console.warn("No access token found. Skipping rule sync.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${CP_API_BASE}/guardrail/rules`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch rules: ${response.status} ${response.statusText}`);
+        }
+
+        const rulesData = await response.json();
+        await chrome.storage.local.set({ active_rules: rulesData });
+        console.log("Rules synced successfully:", rulesData);
+    } catch (error) {
+        console.error("Error syncing rules:", error);
+    }
+}
+
+// Set up periodic sync using alarms
+function setupRuleSyncAlarm() {
+    chrome.alarms.create("ruleSyncAlarm", {
+        periodInMinutes: 15 // Sync every 15 minutes
+    });
+    console.log("Rule sync alarm scheduled (15m interval).");
+}
+
 // Listener for messages from popup.js or content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "LOGIN_SUCCESS") {
         chrome.storage.local.set({ access_token: request.token }, () => {
             console.log("Token stored successfully");
+            // Sync rules immediately after login
+            syncRules();
             sendResponse({ status: "success" });
         });
         return true; 
@@ -31,13 +72,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Intercept outgoing requests to AI platforms (simplified for Task 1.4)
-// Note: In Manifest V3, we use declarativeNetRequest for modification, 
-// but for this initial phase, we focus on providing the token to content scripts 
-// or using webRequest for observation/blocking if permissions allow.
 chrome.webRequest.onBeforeSendHeaders.addListener(
     (details) => {
-        // Only inject token if we are hitting our own Control Plane or a target AI API
-        // For this demo, we check if the URL contains the CP_API_BASE or common AI endpoints
         if (details.url.startsWith(CP_API_BASE) || details.url.includes("openai.com") || details.url.includes("anthropic.com")) {
             getToken().then(token => {
                 if (token) {
@@ -53,3 +89,23 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     { urls: ["<all_urls>"] },
     ["blocking"]
 );
+
+// Alarm listener to trigger sync
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === "ruleSyncAlarm") {
+        syncRules();
+    }
+});
+
+// Trigger sync on startup and installation
+chrome.runtime.onStartup.addListener(() => {
+    console.log("Extension started. Triggering initial rule sync...");
+    setupRuleSyncAlarm();
+    syncRules();
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+    console.log("Extension installed. Triggering initial rule sync...");
+    setupRuleSyncAlarm();
+    syncRules();
+});

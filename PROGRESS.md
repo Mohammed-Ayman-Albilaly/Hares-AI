@@ -25,7 +25,7 @@
 ### Sprint 2: The Management Hub (Dynamic Sync & Audit)
 - [x] **Task 2.1:** Implement CP Rule Management APIs (General & Departmental rules).
 - [x] **Task 2.2:** Build Audit Log Ingestion Engine in CP.
-- [ ] **Task 2.3:** Build Extension Rule Sync Mechanism (Local cache + periodic sync).
+- [x] **Task 2.3:** Build Extension Rule Sync Mechanism (Local cache + periodic sync).
 - [ ] **Task 2.4:** Build Admin Dashboard Rule Configuration & Audit Log Review UI.
 - [ ] **Verification 2.0:** Verify Dept-specific rule enforcement and audit trails.
 
