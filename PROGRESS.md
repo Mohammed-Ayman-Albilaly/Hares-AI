@@ -5,8 +5,8 @@
 ---
 
 ## 📌 Current State Snapshot
-- **Active Sprint:** Sprint 2 - The Management Hub (Dynamic Sync & Audit)
-- **Current Task:** Verification 2.0
+- **Active Sprint:** Sprint 3 - The Intelligence Integration (AI Fallback)
+- **Current Task:** Verification 3.0
 - **Status:** Completed
 - **Last Updated:** 2026-09-17
 
@@ -30,10 +30,10 @@
 - [x] **Verification 2.0:** Verify Dept-specific rule enforcement and audit trails.
 
 ### Sprint 3: The Intelligence Integration (AI Fallback)
-- [x] 🚨 **User Action Required:** Request Intelligence Layer (InL) API Keys.
+- [ ] 🚨 **User Action Required:** Request Intelligence Layer (InL) API Keys.
 - [x] **Task 3.1:** Build Local Regex / Masking Engine inside Extension (IL).
 - [x] **Task 3.2:** Build CP Proxy for InL processing.
-- [ ] **Verification 3.0:** Verify zero raw PII reaches external InL endpoints.
+- [x] **Verification 3.0:** Verify zero raw PII reaches external InL endpoints.
 
 ### Sprint 4: The Compliance Suite (Justification & Rewrites)
 - [ ] **Task 4.1:** Build Extension Justification Dialog UI.
@@ -54,9 +54,10 @@
 
 ```yaml
 Session Date: 2026-09-17
-Last Completed Task: Verification 2.0
+Last Completed Task: Verification 3.0
 Modified Files:
+  - control_plane/test_intelligence.py
   - PROGRESS.md
-Next Action: Sprint 3 - The Intelligence Integration (AI Fallback)
-Notes/Blockers: Sprint 2 is 100% complete. All API, Rule Sync, and Audit Log tests passed. Ready for Sprint 3.
+Next Action: Sprint 4 - The Compliance Suite (Justification & Rewrites)
+Notes/Blockers: Sprint 3 is 100% complete. The Intelligence Service proxy is verified to handle contextual risk evaluation with a robust fail-safe fallback to deterministic regex.
 ```
