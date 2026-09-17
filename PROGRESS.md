@@ -23,7 +23,7 @@
 - [x] **Verification 1.0:** Execute Sprint 1 Verification Cases (Token issuing, storage, and basic prompt blocking).
 
 ### Sprint 2: The Management Hub (Dynamic Sync & Audit)
-- [ ] **Task 2.1:** Implement CP Rule Management APIs (General & Departmental rules).
+- [/] **Task 2.1:** Implement CP Rule Management APIs (General & Departmental rules).
 - [ ] **Task 2.2:** Build Audit Log Ingestion Engine in CP.
 - [ ] **Task 2.3:** Build Extension Rule Sync Mechanism (Local cache + periodic sync).
 - [ ] **Task 2.4:** Build Admin Dashboard Rule Configuration & Audit Log Review UI.
