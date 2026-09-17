@@ -1,35 +1,20 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from typing import Generator
 
-from app.models import User
-from app.schemas import UserRead, UserAuth
-from app.auth import AuthHandler
-from app.api.v1.endpoints.rules import router as rules_router
-
-# DB Configuration
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/hares_db"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from control_plane.app.models import User
+from control_plane.app.schemas import UserRead, UserAuth
+from control_plane.app.auth import AuthHandler
+from control_plane.app.api.v1.endpoints.rules import router as rules_router
+from control_plane.app.core.db import get_db
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
-def get_db() -> Generator:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 app = FastAPI(title="Hares AI Control Plane")
 
 app.include_router(rules_router, prefix="/api/v1/guardrail", tags=["Guardrail"])
-
-@app.post("/api/v1/auth/login", response_model=dict)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
 
 @app.post("/api/v1/auth/login", response_model=dict)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):

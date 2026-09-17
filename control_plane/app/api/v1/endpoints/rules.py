@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from control_plane.app.core.guardrail_engine.engine import engine
 from control_plane.app.models.audit import AuditLog
 from control_plane.app.schemas.audit import AuditLogCreate
-from control_plane.app.main import get_db
+from control_plane.app.core.db import get_db
 
 class InspectRequest(BaseModel):
     text: str

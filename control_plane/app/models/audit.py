@@ -3,7 +3,7 @@ from typing import Optional, List, Any
 from uuid import UUID, uuid4
 from sqlalchemy import String, DateTime, JSON, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
-from control_plane.app.models import Base
+from .base_models import Base
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
