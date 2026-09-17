@@ -31,7 +31,7 @@
 
 ### Sprint 3: The Intelligence Integration (AI Fallback)
 - [ ] 🚨 **User Action Required:** Request Intelligence Layer (InL) API Keys.
-- [ ] **Task 3.1:** Build Local Regex / Masking Engine inside Extension (IL).
+- [x] **Task 3.1:** Build Local Regex / Masking Engine inside Extension (IL).
 - [ ] **Task 3.2:** Build CP Proxy for InL processing.
 - [ ] **Verification 3.0:** Verify zero raw PII reaches external InL endpoints.
 
