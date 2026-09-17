@@ -7,6 +7,7 @@ from typing import Generator
 from app.models import User
 from app.schemas import UserRead, UserAuth
 from app.auth import AuthHandler
+from app.api.v1.endpoints.rules import router as rules_router
 
 # DB Configuration
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/hares_db"
@@ -24,6 +25,11 @@ def get_db() -> Generator:
         db.close()
 
 app = FastAPI(title="Hares AI Control Plane")
+
+app.include_router(rules_router, prefix="/api/v1/guardrail", tags=["Guardrail"])
+
+@app.post("/api/v1/auth/login", response_model=dict)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
 
 @app.post("/api/v1/auth/login", response_model=dict)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):

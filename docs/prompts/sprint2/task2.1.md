@@ -43,3 +43,26 @@ Test risk severity calculation logic (Low, Medium, High, Critical).
 Test text masking behavior to ensure offset replacement is correct and sensitive data is fully redacted.
 
 Run the test suite and confirm all assertions pass.
+--------------------------------
+
+then
+
+--------------------------------
+
+# developer agent
+
+The guardrail_engine has been successfully verified. Now please execute ONLY Task 2.1 (Rule Management & Inspection API):
+
+1. Create a new API router `control_plane/app/api/v1/endpoints/rules.py` (and register it in main.py).
+
+2. Implement endpoints for:
+
+   - POST `/api/v1/guardrail/inspect`: Takes prompt text, passes it through `GuardrailEngine`, and returns the inspection result (severity, entities found, masked text).
+
+   - GET `/api/v1/rules`: Returns active inspection and masking rules.
+
+   - POST `/api/v1/rules`: Creates/updates dynamic rules.
+
+3. Update `PROGRESS.md` to mark Task 2.1 as completed [x].
+
+4. DO NOT implement Audit Log persistence yet (reserved for Task 2.2).
