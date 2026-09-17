@@ -8,6 +8,7 @@ from control_plane.app.core.guardrail_engine.engine import engine
 from control_plane.app.models.audit import AuditLog
 from control_plane.app.schemas.audit import AuditLogCreate
 from control_plane.app.core.db import get_db
+from control_plane.app.services.intelligence import intelligence_service
 
 class InspectRequest(BaseModel):
     text: str
@@ -19,6 +20,7 @@ class InspectResponse(BaseModel):
     detected_entities: List[Dict[str, Any]]
     masked_content: str
     original_content: str
+    intelligence_analysis: Optional[Dict[str, Any]] = None
 
 router = APIRouter()
 
@@ -35,16 +37,36 @@ DYNAMIC_RULES = {
 async def inspect_prompt(request: InspectRequest, db: Session = Depends(get_db)):
     """
     Inspects a prompt for sensitive data using the GuardrailEngine and logs the event.
+    Now includes a secondary evaluation layer via the Intelligence Service.
     """
+    # 1. Local Deterministic Inspection (Regex)
     result = engine.inspect(request.text)
     
+    # 2. Secondary Contextual Evaluation (Intelligence Layer)
+    # We send the masked content to the LLM to avoid leaking PII to the external provider
+    intelligence_analysis = await intelligence_service.evaluate_contextual_risk(
+        result["masked_content"], 
+        result
+    )
+    
+    # 3. Final Severity Adjustment
+    # If the Intelligence Layer identifies a high risk or a "BLOCK" action, we override the severity
+    final_severity = result["risk_severity"]
+    if intelligence_analysis:
+        if intelligence_analysis.recommended_action == "BLOCK":
+            final_severity = "CRITICAL"
+        elif intelligence_analysis.contextual_risk_score > 0.8:
+            final_severity = "HIGH"
+        elif intelligence_analysis.contextual_risk_score > 0.5:
+            final_severity = "MEDIUM"
+
     # Task 2.2: Audit Log Ingestion
     prompt_id = request.prompt_id or str(uuid4())
     
     audit_entry = AuditLog(
         prompt_id=prompt_id,
         user_id=request.user_id if request.user_id else None,
-        risk_severity=result["risk_severity"],
+        risk_severity=final_severity,
         detected_entities=result["detected_entities"],
         original_prompt=result["original_content"],
         masked_prompt=result["masked_content"]
@@ -54,7 +76,11 @@ async def inspect_prompt(request: InspectRequest, db: Session = Depends(get_db))
     db.commit()
     db.refresh(audit_entry)
     
-    return result
+    return {
+        **result,
+        "risk_severity": final_severity,
+        "intelligence_analysis": intelligence_analysis.model_dump() if intelligence_analysis else None
+    }
 
 @router.get("/rules")
 async def get_rules():

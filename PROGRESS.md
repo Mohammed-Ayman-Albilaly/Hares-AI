@@ -30,9 +30,9 @@
 - [x] **Verification 2.0:** Verify Dept-specific rule enforcement and audit trails.
 
 ### Sprint 3: The Intelligence Integration (AI Fallback)
-- [ ] 🚨 **User Action Required:** Request Intelligence Layer (InL) API Keys.
+- [x] 🚨 **User Action Required:** Request Intelligence Layer (InL) API Keys.
 - [x] **Task 3.1:** Build Local Regex / Masking Engine inside Extension (IL).
-- [ ] **Task 3.2:** Build CP Proxy for InL processing.
+- [x] **Task 3.2:** Build CP Proxy for InL processing.
 - [ ] **Verification 3.0:** Verify zero raw PII reaches external InL endpoints.
 
 ### Sprint 4: The Compliance Suite (Justification & Rewrites)

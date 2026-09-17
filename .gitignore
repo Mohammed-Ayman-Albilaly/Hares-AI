@@ -4,3 +4,5 @@ __pycache__/
 .venv/
 **/ .venv/
 __pycache__/*.db
+.env
+control_plane/.env
