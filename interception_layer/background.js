@@ -1,3 +1,5 @@
+import { cpCircuitBreaker } from './circuit_breaker.js';
+
 const CP_API_BASE = "http://localhost:8000/api/v1";
 
 // Utility to get the token from storage
@@ -19,19 +21,21 @@ async function syncRules() {
     }
 
     try {
-        const response = await fetch(`${CP_API_BASE}/guardrail/rules`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
+        await cpCircuitBreaker.call(async () => {
+            const response = await fetch(`${CP_API_BASE}/guardrail/rules`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch rules: ${response.status} ${response.statusText}`);
             }
+
+            const rulesData = await response.json();
+            await chrome.storage.local.set({ active_rules: rulesData });
+            console.log("Rules synced successfully:", rulesData);
         });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch rules: ${response.status} ${response.statusText}`);
-        }
-
-        const rulesData = await response.json();
-        await chrome.storage.local.set({ active_rules: rulesData });
-        console.log("Rules synced successfully:", rulesData);
     } catch (error) {
         console.error("Error syncing rules:", error);
     }
@@ -90,22 +94,24 @@ async function handleJustificationSubmit(payload, sendResponse) {
     }
 
     try {
-        const response = await fetch(`${CP_API_BASE}/guardrail/audit/justification`, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
+        await cpCircuitBreaker.call(async () => {
+            const response = await fetch(`${CP_API_BASE}/guardrail/audit/justification`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`CP API error: ${response.status} ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log("[Hares AI] Justification logged successfully:", result);
+            sendResponse({ status: "success", data: result });
         });
-
-        if (!response.ok) {
-            throw new Error(`CP API error: ${response.status} ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        console.log("[Hares AI] Justification logged successfully:", result);
-        sendResponse({ status: "success", data: result });
     } catch (error) {
         console.error("[Hares AI] Failed to log justification:", error);
         sendResponse({ status: "error", message: error.message });

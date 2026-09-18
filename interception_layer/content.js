@@ -58,7 +58,11 @@ async function processPrompt(text, inputElement) {
                 url: window.location.href
             }
         }, (response) => {
-            console.log('[Hares AI] Control Plane response:', response);
+            if (response && response.status === 'error') {
+                console.error('[Hares AI] Audit log failed, but allowing prompt as per Fail-Open for justification.');
+            } else {
+                console.log('[Hares AI] Control Plane response:', response);
+            }
         });
 
         return { action: 'allow', maskedText };
