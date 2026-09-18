@@ -12,6 +12,7 @@ interface AuditLogEntry {
     detected_entities: any[];
     original_prompt: string;
     masked_prompt: string;
+    justification: string | null;
 }
 
 const AuditLogPage: React.FC = () => {
@@ -63,12 +64,13 @@ const AuditLogPage: React.FC = () => {
                                 <th style={{ padding: '1rem', border: '1px solid #dee2e6' }}>Entities</th>
                                 <th style={{ padding: '1rem', border: '1px solid #dee2e6' }}>Original Prompt</th>
                                 <th style={{ padding: '1rem', border: '1px solid #dee2e6' }}>Masked Prompt</th>
+                                <th style={{ padding: '1rem', border: '1px solid #dee2e6' }}>Justification</th>
                             </tr>
                         </thead>
                         <tbody>
                             {logs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6c757d' }}>No audit logs found.</td>
+                                    <td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: '#6c757d' }}>No audit logs found.</td>
                                 </tr>
                             ) : (
                                 logs.map(log => (
@@ -95,6 +97,7 @@ const AuditLogPage: React.FC = () => {
                                         </td>
                                         <td style={{ padding: '1rem', border: '1px solid #dee2e6', fontSize: '0.85rem' }}>{log.original_prompt}</td>
                                         <td style={{ padding: '1rem', border: '1px solid #dee2e6', fontSize: '0.85rem' }}>{log.masked_prompt}</td>
+                                        <td style={{ padding: '1rem', border: '1px solid #dee2e6', fontSize: '0.85rem', fontStyle: 'italic', color: '#555' }}>{log.justification || 'N/A'}</td>
                                     </tr>
                                 ))
                             )}

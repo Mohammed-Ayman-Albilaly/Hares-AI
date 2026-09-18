@@ -129,3 +129,11 @@ async def log_justification(request: JustificationRequest, db: Session = Depends
     db.refresh(audit_entry)
     
     return {"status": "success", "audit_id": str(audit_entry.id)}
+
+@router.get("/audit/logs")
+async def get_audit_logs(db: Session = Depends(get_db)):
+    """
+    Retrieves all audit logs for review in the Admin Dashboard.
+    """
+    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
+    return logs
