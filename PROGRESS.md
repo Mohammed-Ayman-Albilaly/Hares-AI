@@ -39,7 +39,7 @@
 - [x] **Task 4.1:** Build Extension Justification Dialog UI.
 - [x] **Task 4.2:** Build Privacy-Preserving Prompt Rewrite Engine.
 - [x] **Task 4.3:** Dashboard Audit Integration.
-- [ ] **Verification 4.0:** End-to-End Test: Block -> Justify -> Rewrite -> Audit Log.
+- [x] **Verification 4.0:** End-to-End Test: Block -> Justify -> Rewrite -> Audit Log.
 
 ### Sprint 5: Production Readiness & Hardening
 - [ ] **Task 5.1:** Implement Redis-backed Token Blacklisting & `slowapi` Rate Limiting in CP.
