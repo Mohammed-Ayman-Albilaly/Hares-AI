@@ -99,3 +99,26 @@ Update PROGRESS.md to mark Task 5.4 and Sprint 5 as complete [x].
 
 
 Once completed, present the status summary so we can perform the final Sprint 5 wrap-up!
+
+-------------
+then
+-------------
+# QA agent
+
+Sprint 5 implementation and CI/CD setup are committed! We are now entering Phase 5.0 (Verification, Load Testing, and Chaos Testing).
+
+Please perform the following QA and Resilience checks:
+
+1. Verification Objectives:
+   - Rate Limiting & Fail-Closed/Fail-Open: Verify that circuit breaker state transitions work smoothly under high request volume and simulated CP outages.
+   - Observability & Logging: Verify structured JSON log outputs and ensure zero PII leaks.
+   - Production Docker Stack: Validate container startup, healthcheck behavior, and alembic migration execution.
+
+2. Chaos Testing Scenario:
+   - Simulate backend downtime (stop CP container) -> verify IL falls back to local cached rules (Fail-Closed for PII, Fail-Open for Justification).
+   - Simulate backend recovery -> verify Circuit Breaker transitions from OPEN -> HALF_OPEN -> CLOSED seamlessly.
+
+3. Local Developer Extension Verification:
+   - Verify that the `interception_layer/` directory is clean and ready for local unpacked loading in Chrome (`chrome://extensions`).
+
+Please summarize the QA testing execution results and provide the final sign-off for Sprint 5.
