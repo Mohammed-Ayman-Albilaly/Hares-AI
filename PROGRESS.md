@@ -43,8 +43,8 @@
 
 ### Sprint 5: Production Readiness & Hardening
 - [x] **Task 5.1:** Implement Redis-backed Token Blacklisting & `slowapi` Rate Limiting in CP.
-- [ ] **Task 5.2:** Implement Fail-Closed policy & Circuit la Breaker in IL.
-- [ ] **Task 5.3:** Integrate Sentry & Structured Logging.
+- [x] **Task 5.2:** Implement Fail-Closed policy & Circuit la Breaker in IL.
+- [x] **Task 5.3:** Integrate Sentry & Structured Logging.
 - [ ] **Task 5.4:** Configure GitHub Actions CI/CD and production deployment scripts.
 - [ ] 🚨 **User Action Required:** Request Chrome Web Store / Enterprise GPO access.
 - [ ] **Verification 5.0:** Chaos Testing, Load Testing, and Production Rollout.

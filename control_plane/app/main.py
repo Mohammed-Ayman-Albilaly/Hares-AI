@@ -2,6 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Generator
+import os
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 from control_plane.app.models import User
 from control_plane.app.schemas import UserRead, UserAuth
@@ -9,6 +12,25 @@ from control_plane.app.auth import AuthHandler
 from control_plane.app.api.v1.endpoints.rules import router as rules_router
 from control_plane.app.core.db import get_db
 from control_plane.app.core.rate_limit import limiter, _rate_limit
+from control_plane.app.core.logging import setup_logging
+
+# Initialize structured logging
+setup_logging()
+
+# Sentry Configuration
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[FastApiIntegration()],
+        traces_sample_rate=1.0,
+        # PII Scrubbing: Explicitly strip prompt and token data
+        before_send=lambda event: (
+            event.pop("request", None) if "prompt" in str(event.get("request", {})) else event,
+            event
+        )[1],
+        send_default_pii=False
+    )
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")

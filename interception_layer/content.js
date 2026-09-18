@@ -1,6 +1,7 @@
 import { maskText } from './masker.js';
 import { JustificationDialog } from './dialog.js';
 import { RewriteEngine } from './rewrite_engine.js';
+import { logger } from './logger.js';
 
 /**
  * Intercepts prompt submissions on AI platforms.
@@ -8,15 +9,15 @@ import { RewriteEngine } from './rewrite_engine.js';
 
 const dialog = new JustificationDialog(
     async (justification) => {
-        console.log(`[Hares AI] Justification provided: ${justification}`);
+        logger.info(`Justification provided: ${justification}`);
     },
     () => {
-        console.log("[Hares AI] User cancelled override.");
+        logger.info("User cancelled override.");
     }
 );
 
 async function processPrompt(text, inputElement) {
-    console.log("[Hares AI] Intercepting prompt...");
+    logger.info("Intercepting prompt...");
     
     // 1. Get active rules from storage
     const storage = await chrome.storage.local.get(["active_rules"]);
@@ -41,37 +42,42 @@ async function processPrompt(text, inputElement) {
     const rewrittenText = RewriteEngine.rewrite(text, detected);
     
     // 4. Trigger Dialog with Rewrite Option
-    console.log(`[Hares AI] Risk Level: ${riskLevel}. Triggering rewrite/justification dialog...`);
+    logger.info(`Risk Level: ${riskLevel}. Triggering rewrite/justification dialog...`);
     
-    const result = await dialog.show(text, riskLevel, rewrittenText);
-    
-    if (result.action === 'confirmed') {
-        // User chose to override with justification
-        chrome.runtime.sendMessage({
-            type: 'SUBMIT_JUSTIFICATION',
-            payload: {
-                originalText: text,
-                maskedText: maskedText,
-                justification: result.justification,
-                riskLevel: riskLevel,
-                timestamp: new Date().toISOString(),
-                url: window.location.href
-            }
-        }, (response) => {
-            if (response && response.status === 'error') {
-                console.error('[Hares AI] Audit log failed, but allowing prompt as per Fail-Open for justification.');
-            } else {
-                console.log('[Hares AI] Control Plane response:', response);
-            }
-        });
+    try {
+        const result = await dialog.show(text, riskLevel, rewrittenText);
+        
+        if (result.action === 'confirmed') {
+            // User chose to override with justification
+            chrome.runtime.sendMessage({
+                type: 'SUBMIT_JUSTIFICATION',
+                payload: {
+                    originalText: text,
+                    maskedText: maskedText,
+                    justification: result.justification,
+                    riskLevel: riskLevel,
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href
+                }
+            }, (response) => {
+                if (response && response.status === 'error') {
+                    logger.error('Audit log failed, but allowing prompt as per Fail-Open for justification.', null, { response });
+                } else {
+                    logger.info('Control Plane response received', { response });
+                }
+            });
 
-        return { action: 'allow', maskedText };
-    } else if (result.action === 'rewritten') {
-        // User chose the privacy-preserving rewrite
-        console.log("[Hares AI] User accepted semantic rewrite.");
-        return { action: 'allow', maskedText: rewrittenText };
-    } else {
-        return { action: 'block' };
+            return { action: 'allow', maskedText };
+        } else if (result.action === 'rewritten') {
+            // User chose the privacy-preserving rewrite
+            logger.info("User accepted semantic rewrite.");
+            return { action: 'allow', maskedText: rewrittenText };
+        } else {
+            return { action: 'block' };
+        }
+    } catch (error) {
+        logger.error("Error in prompt processing flow", error);
+        return { action: 'block' }; // Fail-Closed on unexpected logic error
     }
 }
 
@@ -118,7 +124,7 @@ document.addEventListener('click', async (e) => {
             
             if (result.action === 'allow') {
                 input.value = result.maskedText;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('input same', { bubbles: true }));
                 
                 setTimeout(() => {
                     target.click();

@@ -1,4 +1,5 @@
 import { cpCircuitBreaker } from './circuit_breaker.js';
+import { logger } from './logger.js';
 
 const CP_API_BASE = "http://localhost:8000/api/v1";
 
@@ -12,11 +13,11 @@ async function getToken() {
  * Syncs active inspection rules from the Control Plane.
  */
 async function syncRules() {
-    console.log("Attempting to sync rules from Control Plane...");
+    logger.info("Attempting to sync rules from Control Plane...");
     const token = await getToken();
     
     if (!token) {
-        console.warn("No access token found. Skipping rule sync.");
+        logger.warn("No access token found. Skipping rule sync.");
         return;
     }
 
@@ -34,10 +35,10 @@ async function syncRules() {
 
             const rulesData = await response.json();
             await chrome.storage.local.set({ active_rules: rulesData });
-            console.log("Rules synced successfully:", rulesData);
+            logger.info("Rules synced successfully", { ruleCount: activeRules.length });
         });
     } catch (error) {
-        console.error("Error syncing rules:", error);
+        logger.error("Error syncing rules", error);
     }
 }
 
@@ -46,14 +47,14 @@ function setupRuleSyncAlarm() {
     chrome.alarms.create("ruleSyncAlarm", {
         periodInMinutes: 15 // Sync every 15 minutes
     });
-    console.log("Rule sync alarm scheduled (15m interval).");
+    logger.info("Rule sync alarm scheduled (15m interval).");
 }
 
 // Listener for messages from popup.js or content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "LOGIN_SUCCESS") {
         chrome.storage.local.set({ access_token: request.token }, () => {
-            console.log("Token stored successfully");
+            logger.info("Token stored successfully");
             // Sync rules immediately after login
             syncRules();
             sendResponse({ status: "success" });
@@ -63,7 +64,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     if (request.type === "LOGOUT") {
         chrome.storage.local.remove("access_token", () => {
-            console.log("Token removed");
+            logger.info("Token removed");
             sendResponse({ status: "success" });
         });
         return true;
@@ -84,11 +85,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  * Forwards the justification and prompt payload to the Control Plane for audit logging.
  */
 async function handleJustificationSubmit(payload, sendResponse) {
-    console.log("[Hares AI] Forwarding justification to Control Plane...", payload);
+    logger.info("Forwarding justification to Control Plane...");
     const token = await getToken();
     
     if (!token) {
-        console.error("[Hares AI] No auth token available for justification submission.");
+        logger.error("No auth token available for justification submission.");
         sendResponse({ status: "error", message: "Authentication required" });
         return;
     }
@@ -109,11 +110,11 @@ async function handleJustificationSubmit(payload, sendResponse) {
             }
 
             const result = await response.json();
-            console.log("[Hares AI] Justification logged successfully:", result);
+            logger.info("Justification logged successfully", { auditId: result.audit_id });
             sendResponse({ status: "success", data: result });
         });
     } catch (error) {
-        console.error("[Hares AI] Failed to log justification:", error);
+        logger.error("Failed to log justification", error);
         sendResponse({ status: "error", message: error.message });
     }
 }
@@ -146,13 +147,13 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 // Trigger sync on startup and installation
 chrome.runtime.onStartup.addListener(() => {
-    console.log("Extension started. Triggering initial rule sync...");
+    logger.info("Extension started. Triggering initial rule sync...");
     setupRuleSyncAlarm();
     syncRules();
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("Extension installed. Triggering initial rule sync...");
+    logger.info("Extension installed. Triggering initial rule sync...");
     setupRuleSyncAlarm();
     syncRules();
 });
