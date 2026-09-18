@@ -5,10 +5,10 @@
 ---
 
 ## 📌 Current State Snapshot
-- **Active Sprint:** Sprint 3 - The Intelligence Integration (AI Fallback)
-- **Current Task:** Verification 3.0
-- **Status:** Completed
-- **Last Updated:** 2026-09-17
+- **Active Sprint:** Sprint 4 - The Compliance Suite (Justification & Rewrites)
+- **Current Task:** Task 4.1
+- **Status:** In Progress
+- **Last Updated:** 2026-09-18
 
 ---
 
@@ -30,13 +30,13 @@
 - [x] **Verification 2.0:** Verify Dept-specific rule enforcement and audit trails.
 
 ### Sprint 3: The Intelligence Integration (AI Fallback)
-- [ ] 🚨 **User Action Required:** Request Intelligence Layer (InL) API Keys.
+- [x] 🚨 **User Action Required:** Request Intelligence Layer (InL) API Keys.
 - [x] **Task 3.1:** Build Local Regex / Masking Engine inside Extension (IL).
 - [x] **Task 3.2:** Build CP Proxy for InL processing.
 - [x] **Verification 3.0:** Verify zero raw PII reaches external InL endpoints.
 
 ### Sprint 4: The Compliance Suite (Justification & Rewrites)
-- [ ] **Task 4.1:** Build Extension Justification Dialog UI.
+- [x] **Task 4.1:** Build Extension Justification Dialog UI.
 - [ ] **Task 4.2:** Build Privacy-Preserving Prompt Rewrite Engine.
 - [ ] **Verification 4.0:** End-to-End Test: Block -> Justify -> Rewrite -> Audit Log.
 

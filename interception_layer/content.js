@@ -1,32 +1,74 @@
 import { maskText } from './masker.js';
+import { JustificationDialog } from './dialog.js';
 
 /**
  * Intercepts prompt submissions on AI platforms.
- * This is a simplified implementation that targets common textarea/input elements
- * and intercepts the 'Enter' key or 'Submit' buttons.
  */
 
-async function processPrompt(text) {
+const dialog = new JustificationDialog(
+    async (justification) => {
+        console.log(`[Hares AI] Justification provided: ${justification}`);
+        // This will be handled by the background script to send to Control Plane
+    },
+    () => {
+        console.log("[Hares AI] User cancelled override.");
+    }
+);
+
+async function processPrompt(text, inputElement) {
     console.log("[Hares AI] Intercepting prompt...");
     
-    // 1. Get active rules from storage (synced by background.js)
+    // 1. Get active rules from storage
     const storage = await chrome.storage.local.get(["active_rules"]);
     const activeRules = storage.active_rules || [];
     
-    // 2. Apply local masking
+    // 2. Apply local masking and risk evaluation
     const { maskedText, detected } = await maskText(text, activeRules);
     
+    // Determine risk level based on detected PII or rules
+    // In a full implementation, this would come from the Intelligence Layer (InL)
+    // For now, if PII is detected, we treat it as HIGH_RISK. If it's a critical block, BLOCKED.
+    let riskLevel = 'LOW';
     if (detected.length > 0) {
-        console.log(`[Hares AI] PII Detected: ${detected.map(d => d.type).join(', ')}`);
-        console.log(`[Hares AI] Masked Content: ${maskedText}`);
-    } else {
-        console.log("[Hares AI] No PII detected.");
+        riskLevel = 'HIGH_RISK';
+        // If any detected PII is marked as 'CRITICAL' in rules, it's BLOCKED
+        const isCritical = detected.some(d => d.severity === 'CRITICAL');
+        if (isCritical) riskLevel = 'BLOCKED';
     }
 
-    return { maskedText, detected };
+    if (riskLevel === 'LOW') {
+        return { action: 'allow', maskedText };
+    }
+
+    // 3. Trigger Justification Dialog for BLOCKED or HIGH_RISK
+    console.log(`[Hares AI] Risk Level: ${riskLevel}. Triggering justification dialog...`);
+    
+    // Prevent the original submission by returning a special state
+    const result = await dialog.show(text, riskLevel);
+    
+    if (result.action === 'confirmed') {
+        // Send justification and payload to Control Plane via background script
+        chrome.runtime.sendMessage({
+            type: 'SUBMIT_JUSTIFICATION',
+            payload: {
+                originalText: text,
+                maskedText: maskedText,
+                justification: result.justification,
+                riskLevel: riskLevel,
+                timestamp: new Date().toISOString(),
+                url: window.location.href
+            }
+        }, (response) => {
+            console.log('[Hares AI] Control Plane response:', response);
+        });
+
+        return { action: 'allow', maskedText };
+    } else {
+        return { action: 'block' };
+    }
 }
 
-// Intercepts 'Enter' key on textareas (common in AI chats)
+// Intercepts 'Enter' key on textareas
 document.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         const activeElement = document.activeElement;
@@ -34,15 +76,32 @@ document.addEventListener('keydown', async (e) => {
             const originalText = activeElement.value;
             if (!originalText) return;
 
-            const { maskedText } = await processPrompt(originalText);
+            // Prevent default to stop the prompt from being sent immediately
+            e.preventDefault();
             
-            // Replace the text in the element before it is sent
-            // Note: This is a basic replacement. For complex React/Vue apps, 
-            // we might need to trigger input events.
-            activeElement.value = maskedText;
+            const result = await processPrompt(originalText, activeElement);
             
-            // Trigger a change event so the app knows the value changed
-            activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+            if (result.action === 'allow') {
+                activeElement.value = result.maskedText;
+                activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                // Re-trigger the Enter key event to actually send the prompt
+                // Since we can't easily re-trigger 'Enter' on some platforms, 
+                // we might need to simulate a click on the send button.
+                // For this implementation, we just set the value and let the user press Enter again
+                // or we can try to dispatch a new KeyEvent.
+                
+                // Attempt to simulate Enter press
+                const enterEvent = new KeyboardEvent('keydown', {
+                    key: 'Enter',
+                    code: 'Enter',
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true,
+                    cancelable: true
+                });
+                activeElement.dispatchEvent(enterEvent);
+            }
         }
     }
 });
@@ -54,11 +113,22 @@ document.addEventListener('click', async (e) => {
         // Find the nearest textarea/input
         const input = document.querySelector('textarea, input[type="text"]');
         if (input && input.value) {
-            const { maskedText } = await processPrompt(input.value);
-            input.value = maskedText;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const result = await processPrompt(input.value, input);
+            
+            if (result.action === 'allow') {
+                input.value = result.maskedText;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                // Simulate click on the button again
+                setTimeout(() => {
+                    target.click();
+                }, 100);
+            }
         }
     }
 }, true);
 
-console.log("[Hares AI] Local Masking Engine active.");
+console.log("[Hares AI] Compliance Layer (Justification) active.");

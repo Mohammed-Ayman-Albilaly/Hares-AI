@@ -69,7 +69,48 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         getToken().then(token => sendResponse({ token }));
         return true;
     }
+
+    if (request.type === "SUBMIT_JUSTIFICATION") {
+        handleJustificationSubmit(request.payload, sendResponse);
+        return true;
+    }
 });
+
+/**
+ * Forwards the justification and prompt payload to the Control Plane for audit logging.
+ */
+async function handleJustificationSubmit(payload, sendResponse) {
+    console.log("[Hares AI] Forwarding justification to Control Plane...", payload);
+    const token = await getToken();
+    
+    if (!token) {
+        console.error("[Hares AI] No auth token available for justification submission.");
+        sendResponse({ status: "error", message: "Authentication required" });
+        return;
+    }
+
+    try {
+        const response = await fetch(`${CP_API_BASE}/guardrail/audit/justification`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`CP API error: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log("[Hares AI] Justification logged successfully:", result);
+        sendResponse({ status: "success", data: result });
+    } catch (error) {
+        console.error("[Hares AI] Failed to log justification:", error);
+        sendResponse({ status: "error", message: error.message });
+    }
+}
 
 // Intercept outgoing requests to AI platforms (simplified for Task 1.4)
 chrome.webRequest.onBeforeSendHeaders.addListener(

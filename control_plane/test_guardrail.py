@@ -1,3 +1,53 @@
+from fastapi.testclient import TestClient
+from control_plane.app.main import app
+from control_plane.app.core.db import get_db
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from control_plane.app.models.audit import Base, AuditLog
+
+# Setup a test database
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test_db.db"
+engine_db = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_db)
+
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+app.dependency_overrides[get_db] = override_get_db
+
+def test_log_justification():
+    # Create tables in test db
+    Base.metadata.create_all(bind=engine_db)
+    
+    client = TestClient(app)
+    payload = {
+        "originalText": "My secret key is sk-123",
+        "maskedText": "My secret key is <API_KEY>",
+        "justification": "Needed for emergency debugging of production issue #99",
+        "riskLevel": "CRITICAL",
+        "url": "https://chat.openai.com",
+        "timestamp": "2026-09-18T12:00:00Z"
+    }
+    
+    response = client.post("/api/v1/guardrail/audit/justification", json=payload)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert "audit_id" in data
+    
+    # Verify it's in the database
+    db = TestingSessionLocal()
+    log = db.query(AuditLog).filter(AuditLog.justification == "Needed for emergency debugging of production issue #99").first()
+    assert log is not None
+    assert log.original_prompt == "My secret key is sk-123"
+    assert log.risk_severity == "CRITICAL"
+    db.close()
+
 import pytest
 from control_plane.app.core.guardrail_engine.engine import engine, RiskSeverity
 

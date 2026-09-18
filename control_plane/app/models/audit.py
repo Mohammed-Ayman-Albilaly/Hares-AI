@@ -16,3 +16,4 @@ class AuditLog(Base):
     detected_entities: Mapped[List[Any]] = mapped_column(JSON, nullable=False)
     original_prompt: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     masked_prompt: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    justification: Mapped[Optional[str]] = mapped_column(String, nullable=True)

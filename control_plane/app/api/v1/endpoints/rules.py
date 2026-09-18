@@ -22,6 +22,15 @@ class InspectResponse(BaseModel):
     original_content: str
     intelligence_analysis: Optional[Dict[str, Any]] = None
 
+class JustificationRequest(BaseModel):
+    originalText: str
+    maskedText: str
+    justification: str
+    riskLevel: str
+    url: Optional[str] = None
+    timestamp: Optional[str] = None
+    user_id: Optional[str] = None
+
 router = APIRouter()
 
 # In-memory storage for dynamic rules
@@ -97,3 +106,26 @@ async def update_rules(rules: Dict[str, Any]):
     global DYNAMIC_RULES
     DYNAMIC_RULES.update(rules)
     return {"status": "success", "updated_rules": DYNAMIC_RULES}
+
+@router.post("/audit/justification")
+async def log_justification(request: JustificationRequest, db: Session = Depends(get_db)):
+    """
+    Logs a user's business justification for overriding a blocked or high-risk prompt.
+    """
+    prompt_id = str(uuid4())
+    
+    audit_entry = AuditLog(
+        prompt_id=prompt_id,
+        risk_severity=request.riskLevel,
+        detected_entities=[], # Justification comes after initial detection
+        original_prompt=request.originalText,
+        masked_prompt=request.maskedText,
+        justification=request.justification,
+        user_id=None # In a real scenario, extract from JWT token
+    )
+    
+    db.add(audit_entry)
+    db.commit()
+    db.refresh(audit_entry)
+    
+    return {"status": "success", "audit_id": str(audit_entry.id)}

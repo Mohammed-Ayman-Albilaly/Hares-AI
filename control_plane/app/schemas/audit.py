@@ -9,6 +9,7 @@ class AuditLogBase(BaseModel):
     detected_entities: List[Any]
     original_prompt: Optional[str] = None
     masked_prompt: Optional[str] = None
+    justification: Optional[str] = None
 
 class AuditLogCreate(AuditLogBase):
     user_id: Optional[UUID] = None

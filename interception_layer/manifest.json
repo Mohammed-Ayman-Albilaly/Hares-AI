@@ -20,10 +20,10 @@
     "default_popup": "popup.html",
     "default_title": "Hares AI Auth"
   },
-  "content_scripts": [
+    "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["masker.js", "content.js"]
+      "js": ["masker.js", "dialog.js", "content.js"]
     }
   ]
 }
