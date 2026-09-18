@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Generator
@@ -8,16 +8,19 @@ from control_plane.app.schemas import UserRead, UserAuth
 from control_plane.app.auth import AuthHandler
 from control_plane.app.api.v1.endpoints.rules import router as rules_router
 from control_plane.app.core.db import get_db
+from control_plane.app.core.rate_limit import limiter, _rate_limit
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
 app = FastAPI(title="Hares AI Control Plane")
+app.state.limiter = limiter
 
 app.include_router(rules_router, prefix="/api/v1/guardrail", tags=["Guardrail"])
 
 @app.post("/api/v1/auth/login", response_model=dict)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@_rate_limit(limiter, "5-per-minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not AuthHandler.verify_password(form_data.password, user.password_hash):
         raise HTTPException(
@@ -48,3 +51,8 @@ def validate_token(token: str = Depends(oauth2_scheme), db: Session = Depends(ge
         )
     
     return user
+
+@app.post("/api/v1/auth/logout")
+def logout(token: str = Depends(oauth2_scheme)):
+    AuthHandler.blacklist_token(token)
+    return {"detail": "Successfully logged out"}

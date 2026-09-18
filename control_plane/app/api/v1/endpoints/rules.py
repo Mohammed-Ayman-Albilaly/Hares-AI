@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -9,6 +11,7 @@ from control_plane.app.models.audit import AuditLog
 from control_plane.app.schemas.audit import AuditLogCreate
 from control_plane.app.core.db import get_db
 from control_plane.app.services.intelligence import intelligence_service
+from control_plane.app.core.rate_limit import limiter, _rate_limit
 
 class InspectRequest(BaseModel):
     text: str
@@ -43,13 +46,14 @@ DYNAMIC_RULES = {
 }
 
 @router.post("/inspect", response_model=InspectResponse)
-async def inspect_prompt(request: InspectRequest, db: Session = Depends(get_db)):
+@_rate_limit(limiter, "100-per-minute")
+async def inspect_prompt(request: Request, payload: InspectRequest, db: Session = Depends(get_db)):
     """
     Inspects a prompt for sensitive data using the GuardrailEngine and logs the event.
     Now includes a secondary evaluation layer via the Intelligence Service.
     """
     # 1. Local Deterministic Inspection (Regex)
-    result = engine.inspect(request.text)
+    result = engine.inspect(payload.text)
     
     # 2. Secondary Contextual Evaluation (Intelligence Layer)
     # We send the masked content to the LLM to avoid leaking PII to the external provider
@@ -70,11 +74,11 @@ async def inspect_prompt(request: InspectRequest, db: Session = Depends(get_db))
             final_severity = "MEDIUM"
 
     # Task 2.2: Audit Log Ingestion
-    prompt_id = request.prompt_id or str(uuid4())
+    prompt_id = payload.prompt_id or str(uuid4())
     
     audit_entry = AuditLog(
         prompt_id=prompt_id,
-        user_id=request.user_id if request.user_id else None,
+        user_id=payload.user_id if payload.user_id else None,
         risk_severity=final_severity,
         detected_entities=result["detected_entities"],
         original_prompt=result["original_content"],
@@ -92,14 +96,16 @@ async def inspect_prompt(request: InspectRequest, db: Session = Depends(get_db))
     }
 
 @router.get("/rules")
-async def get_rules():
+@_rate_limit(limiter, "20-per-minute")
+async def get_rules(request: Request):
     """
     Returns the currently active inspection and masking rules.
     """
     return DYNAMIC_RULES
 
 @router.post("/rules")
-async def update_rules(rules: Dict[str, Any]):
+@_rate_limit(limiter, "10-per-minute")
+async def update_rules(request: Request, rules: Dict[str, Any]):
     """
     Updates the dynamic rules configuration.
     """
@@ -108,7 +114,8 @@ async def update_rules(rules: Dict[str, Any]):
     return {"status": "success", "updated_rules": DYNAMIC_RULES}
 
 @router.post("/audit/justification")
-async def log_justification(request: JustificationRequest, db: Session = Depends(get_db)):
+@_rate_limit(limiter, "60-per-minute")
+async def log_justification(request: Request, payload: JustificationRequest, db: Session = Depends(get_db)):
     """
     Logs a user's business justification for overriding a blocked or high-risk prompt.
     """
@@ -116,11 +123,11 @@ async def log_justification(request: JustificationRequest, db: Session = Depends
     
     audit_entry = AuditLog(
         prompt_id=prompt_id,
-        risk_severity=request.riskLevel,
+        risk_severity=payload.riskLevel,
         detected_entities=[], # Justification comes after initial detection
-        original_prompt=request.originalText,
-        masked_prompt=request.maskedText,
-        justification=request.justification,
+        original_prompt=payload.originalText,
+        masked_prompt=payload.maskedText,
+        justification=payload.justification,
         user_id=None # In a real scenario, extract from JWT token
     )
     
@@ -131,7 +138,8 @@ async def log_justification(request: JustificationRequest, db: Session = Depends
     return {"status": "success", "audit_id": str(audit_entry.id)}
 
 @router.get("/audit/logs")
-async def get_audit_logs(db: Session = Depends(get_db)):
+@_rate_limit(limiter, "30-per-minute")
+async def get_audit_logs(request: Request, db: Session = Depends(get_db)):
     """
     Retrieves all audit logs for review in the Admin Dashboard.
     """
