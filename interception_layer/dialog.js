@@ -1,6 +1,6 @@
 /**
  * dialog.js
- * Handles the creation and interaction of the Justification Modal.
+ * Handles the creation and interaction of the Justification and Rewrite Modals.
  */
 
 export class JustificationDialog {
@@ -10,11 +10,16 @@ export class JustificationDialog {
         this.modal = null;
     }
 
-    show(promptText, riskLevel) {
+    /**
+     * Shows the dialog. If a rewritten prompt is provided, it offers the user the choice
+     * between using the original (with justification) or using the rewritten version.
+     */
+    show(promptText, riskLevel, rewrittenText = null) {
         return new Promise((resolve) => {
-            this.createModal(promptText, riskLevel);
+            this.createModal(promptText, riskLevel, rewrittenText);
             
             const confirmBtn = this.modal.querySelector('#hares-confirm-btn');
+            const rewriteBtn = this.modal.querySelector('#hares-rewrite-btn');
             const cancelBtn = this.modal.querySelector('#hares-cancel-btn');
             const textarea = this.modal.querySelector('#hares-justification-text');
 
@@ -29,6 +34,13 @@ export class JustificationDialog {
                 resolve({ action: 'confirmed', justification });
             };
 
+            if (rewriteBtn) {
+                rewriteBtn.onclick = () => {
+                    this.removeModal();
+                    resolve({ action: 'rewritten' });
+                };
+            }
+
             cancelBtn.onclick = () => {
                 this.removeModal();
                 this.onCancel();
@@ -37,7 +49,7 @@ export class JustificationDialog {
         });
     }
 
-    createModal(promptText, riskLevel) {
+    createModal(promptText, riskLevel, rewrittenText = null) {
         // Create overlay
         const overlay = document.createElement('div');
         overlay.id = 'hares-overlay';
@@ -62,7 +74,7 @@ export class JustificationDialog {
             padding: '20px',
             borderRadius: '8px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            maxWidth: '500px',
+            maxWidth: '600px',
             width: '90%',
             color: '#333'
         });
@@ -73,26 +85,60 @@ export class JustificationDialog {
         title.style.color = riskLevel === 'BLOCKED' ? '#d32f2f' : '#f57c00';
 
         const message = document.createElement('p');
-        message.innerText = 'Your prompt contains sensitive information or violates company policy. Please provide a business justification to override this block.';
+        message.innerText = 'Your prompt contains sensitive information. You can either provide a justification to use the original prompt or use the suggested privacy-preserving rewrite.';
         message.style.fontSize = '14px';
         message.style.marginBottom = '15px';
 
-        const promptPreview = document.createElement('div');
-        promptPreview.innerText = promptText;
-        Object.assign(promptPreview.style, {
+        // Prompt Comparison Section
+        const comparisonContainer = document.createElement('div');
+        Object.assign(comparisonContainer.style, {
+            display: 'flex',
+            gap: '10px',
+            marginBottom: '15px'
+        });
+
+        const originalBox = document.createElement('div');
+        originalBox.style.flex = '1';
+        originalBox.innerHTML = `<div style="font-size:11px; font-weight:bold; margin-bottom:5px;">Original</div>`;
+        const originalPreview = document.createElement('div');
+        originalPreview.innerText = promptText;
+        Object.assign(originalPreview.style, {
             backgroundColor: '#f5f5f5',
             padding: '10px',
             borderRadius: '4px',
             fontSize: '12px',
-            marginBottom: '15px',
             border: '1px solid #ddd',
             maxHeight: '100px',
             overflowY: 'auto',
             whiteSpace: 'pre-wrap'
         });
+        originalBox.appendChild(originalPreview);
+
+        comparisonContainer.appendChild(originalBox);
+
+        if (rewrittenText) {
+            const rewriteBox = document.createElement('div');
+            rewriteBox.style.flex = '1';
+            rewriteBox.innerHTML = `<div style="font-size:11px; font-weight:bold; margin-bottom:5px;">Suggested Rewrite</div>`;
+            const rewritePreview = document.createElement('div');
+            rewritePreview.innerText = rewrittenText;
+            Object.assign(rewritePreview.style, {
+                backgroundColor: '#e3f2fd',
+                padding: '10px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                border: '1px solid #bbdefb',
+                maxHeight: '100px',
+                overflowY: 'auto',
+                whiteSpace: 'pre-wrap',
+                color: '#0d47a1'
+            });
+            rewriteBox.appendChild(rewritePreview);
+            comparisonContainer.appendChild(rewriteBox);
+        }
 
         const label = document.createElement('label');
-        label.innerText = 'Business Justification:';
+        label.innerText = 'Business Justification (to use original):';
         label.style.display = 'block';
         label.style.marginBottom = '5px';
         label.style.fontSize = '13px';
@@ -142,12 +188,28 @@ export class JustificationDialog {
             fontWeight: 'bold'
         });
 
-        buttonContainer.appendChild(cancelBtn);
+        if (rewrittenText) {
+            const rewriteBtn = document.createElement('button');
+            rewriteBtn.id = 'hares-rewrite-btn';
+            rewriteBtn.innerText = 'Use Rewrite';
+            Object.assign(rewriteBtn.style, {
+                padding: '6px 12px',
+                cursor: 'pointer',
+                borderRadius: '4px',
+                border: 'none',
+                backgroundColor: '#28a745',
+                color: 'white',
+                fontWeight: 'bold'
+            });
+            buttonContainer.appendChild(rewriteBtn);
+        }
+
         buttonContainer.appendChild(confirmBtn);
+        buttonContainer.appendChild(cancelBtn);
 
         container.appendChild(title);
         container.appendChild(message);
-        container.appendChild(promptPreview);
+        container.appendChild(comparisonContainer);
         container.appendChild(label);
         container.appendChild(textarea);
         container.appendChild(buttonContainer);

@@ -6,7 +6,7 @@
 
 ## 📌 Current State Snapshot
 - **Active Sprint:** Sprint 4 - The Compliance Suite (Justification & Rewrites)
-- **Current Task:** Task 4.1
+- **Current Task:** Task 4.2
 - **Status:** In Progress
 - **Last Updated:** 2026-09-18
 
@@ -37,7 +37,7 @@
 
 ### Sprint 4: The Compliance Suite (Justification & Rewrites)
 - [x] **Task 4.1:** Build Extension Justification Dialog UI.
-- [ ] **Task 4.2:** Build Privacy-Preserving Prompt Rewrite Engine.
+- [x] **Task 4.2:** Build Privacy-Preserving Prompt Rewrite Engine.
 - [ ] **Verification 4.0:** End-to-End Test: Block -> Justify -> Rewrite -> Audit Log.
 
 ### Sprint 5: Production Readiness & Hardening

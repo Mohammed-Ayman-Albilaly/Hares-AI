@@ -23,7 +23,7 @@
     "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["masker.js", "dialog.js", "content.js"]
+      "js": ["masker.js", "rewrite_engine.js", "dialog.js", "content.js"]
     }
   ]
 }

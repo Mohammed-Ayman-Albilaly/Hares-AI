@@ -1,5 +1,6 @@
 import { maskText } from './masker.js';
 import { JustificationDialog } from './dialog.js';
+import { RewriteEngine } from './rewrite_engine.js';
 
 /**
  * Intercepts prompt submissions on AI platforms.
@@ -8,7 +9,6 @@ import { JustificationDialog } from './dialog.js';
 const dialog = new JustificationDialog(
     async (justification) => {
         console.log(`[Hares AI] Justification provided: ${justification}`);
-        // This will be handled by the background script to send to Control Plane
     },
     () => {
         console.log("[Hares AI] User cancelled override.");
@@ -26,12 +26,9 @@ async function processPrompt(text, inputElement) {
     const { maskedText, detected } = await maskText(text, activeRules);
     
     // Determine risk level based on detected PII or rules
-    // In a full implementation, this would come from the Intelligence Layer (InL)
-    // For now, if PII is detected, we treat it as HIGH_RISK. If it's a critical block, BLOCKED.
     let riskLevel = 'LOW';
     if (detected.length > 0) {
         riskLevel = 'HIGH_RISK';
-        // If any detected PII is marked as 'CRITICAL' in rules, it's BLOCKED
         const isCritical = detected.some(d => d.severity === 'CRITICAL');
         if (isCritical) riskLevel = 'BLOCKED';
     }
@@ -40,14 +37,16 @@ async function processPrompt(text, inputElement) {
         return { action: 'allow', maskedText };
     }
 
-    // 3. Trigger Justification Dialog for BLOCKED or HIGH_RISK
-    console.log(`[Hares AI] Risk Level: ${riskLevel}. Triggering justification dialog...`);
+    // 3. Generate a semantic rewrite for the user to consider
+    const rewrittenText = RewriteEngine.rewrite(text, detected);
     
-    // Prevent the original submission by returning a special state
-    const result = await dialog.show(text, riskLevel);
+    // 4. Trigger Dialog with Rewrite Option
+    console.log(`[Hares AI] Risk Level: ${riskLevel}. Triggering rewrite/justification dialog...`);
+    
+    const result = await dialog.show(text, riskLevel, rewrittenText);
     
     if (result.action === 'confirmed') {
-        // Send justification and payload to Control Plane via background script
+        // User chose to override with justification
         chrome.runtime.sendMessage({
             type: 'SUBMIT_JUSTIFICATION',
             payload: {
@@ -63,6 +62,10 @@ async function processPrompt(text, inputElement) {
         });
 
         return { action: 'allow', maskedText };
+    } else if (result.action === 'rewritten') {
+        // User chose the privacy-preserving rewrite
+        console.log("[Hares AI] User accepted semantic rewrite.");
+        return { action: 'allow', maskedText: rewrittenText };
     } else {
         return { action: 'block' };
     }
@@ -76,7 +79,6 @@ document.addEventListener('keydown', async (e) => {
             const originalText = activeElement.value;
             if (!originalText) return;
 
-            // Prevent default to stop the prompt from being sent immediately
             e.preventDefault();
             
             const result = await processPrompt(originalText, activeElement);
@@ -85,13 +87,6 @@ document.addEventListener('keydown', async (e) => {
                 activeElement.value = result.maskedText;
                 activeElement.dispatchEvent(new Event('input', { bubbles: true }));
                 
-                // Re-trigger the Enter key event to actually send the prompt
-                // Since we can't easily re-trigger 'Enter' on some platforms, 
-                // we might need to simulate a click on the send button.
-                // For this implementation, we just set the value and let the user press Enter again
-                // or we can try to dispatch a new KeyEvent.
-                
-                // Attempt to simulate Enter press
                 const enterEvent = new KeyboardEvent('keydown', {
                     key: 'Enter',
                     code: 'Enter',
@@ -110,7 +105,6 @@ document.addEventListener('keydown', async (e) => {
 document.addEventListener('click', async (e) => {
     const target = e.target;
     if (target && (target.innerText?.toLowerCase().includes('send') || target.innerText?.toLowerCase().includes('submit'))) {
-        // Find the nearest textarea/input
         const input = document.querySelector('textarea, input[type="text"]');
         if (input && input.value) {
             e.preventDefault();
@@ -122,7 +116,6 @@ document.addEventListener('click', async (e) => {
                 input.value = result.maskedText;
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 
-                // Simulate click on the button again
                 setTimeout(() => {
                     target.click();
                 }, 100);
@@ -131,4 +124,4 @@ document.addEventListener('click', async (e) => {
     }
 }, true);
 
-console.log("[Hares AI] Compliance Layer (Justification) active.");
+console.log("[Hares AI] Compliance Layer (Rewrite Engine) active.");
